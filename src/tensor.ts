@@ -552,9 +552,9 @@ export class Tensor<R extends Rank = Rank> {
    * @param locs The location indices.
    */
   get(...locs: number[]) {
-    deprecationWarningFn(
-        `Tensor.get() is deprecated. Use Tensor.array() and native array ` +
-        `indexing instead.`);
+    // deprecationWarningFn(
+    //     `Tensor.get() is deprecated. Use Tensor.array() and native array ` +
+    //     `indexing instead.`);
 
     util.assert(
         locs.length === this.rank,
@@ -576,9 +576,9 @@ export class Tensor<R extends Rank = Rank> {
   /** Returns a `tf.TensorBuffer` that holds the underlying data. */
   /** @doc {heading: 'Tensors', subheading: 'Classes'} */
   buffer<D extends DataType = 'float32'>(): TensorBuffer<R, D> {
-    deprecationWarningFn(
-        `Tensor.buffer() is renamed to Tensor.bufferSync() in TensorFlow.js ` +
-        `1.0 and Tensor.buffer() will become an async function.`);
+    // deprecationWarningFn(
+    //     `Tensor.buffer() is renamed to Tensor.bufferSync() in TensorFlow.js ` +
+    //     `1.0 and Tensor.buffer() will become an async function.`);
 
     return opHandler.buffer(this.shape, this.dtype as D, this.dataSync());
   }
@@ -834,10 +834,10 @@ export class Tensor<R extends Rank = Rank> {
       variance: Tensor<R>|Tensor1D|TensorLike, varianceEpsilon = .001,
       scale?: Tensor<R>|Tensor1D|TensorLike,
       offset?: Tensor<R>|Tensor1D|TensorLike): Tensor<R> {
-    deprecationWarningFn(
-        'tf.batchNormalization() is going away. ' +
-        'Use tf.batchNorm() instead, and note the positional argument change ' +
-        'of scale, offset, and varianceEpsilon');
+    // deprecationWarningFn(
+    //     'tf.batchNormalization() is going away. ' +
+    //     'Use tf.batchNorm() instead, and note the positional argument change ' +
+    //     'of scale, offset, and varianceEpsilon');
     return this.batchNorm(mean, variance, offset, scale, varianceEpsilon);
   }
 
