@@ -4,7 +4,6 @@ coverage/
 npm-debug.log
 yarn-error.log
 .DS_Store
-dist/
 .idea/
 *.tgz
 **/*.pyc
