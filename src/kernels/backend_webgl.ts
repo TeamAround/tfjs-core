@@ -15,7 +15,7 @@
  * =============================================================================
  */
 
-import {getWebGLContext} from '../canvas_util';
+import {getWebGLContext, createCanvas} from '../canvas_util';
 import {MemoryInfo, TimingInfo} from '../engine';
 import {ENV} from '../environment';
 import {tidy} from '../globals';
@@ -219,16 +219,18 @@ export class MathBackendWebGL implements KernelBackend {
     const outShape = [pixels.height, pixels.width, numChannels];
 
     if (ENV.get('IS_BROWSER')) {
-      if (!(pixels instanceof HTMLVideoElement) &&
-          !(pixels instanceof HTMLImageElement) &&
-          !(pixels instanceof HTMLCanvasElement) &&
-          !(pixels instanceof ImageData)) {
+      const pixelsInstance = pixels ? pixels.constructor.name : 'undefined';
+      if (!(pixelsInstance === 'HTMLVideoElement') &&
+          !(pixelsInstance === 'HTMLImageElement') &&
+          !(pixelsInstance === 'HTMLCanvasElement') &&
+          !(pixelsInstance === 'OffscreenCanvas') &&
+          !(pixelsInstance === 'ImageData')) {
         throw new Error(
             'pixels passed to tf.browser.fromPixels() must be either an ' +
             `HTMLVideoElement, HTMLImageElement, HTMLCanvasElement or ` +
             `ImageData, but was ${(pixels as {}).constructor.name}`);
       }
-      if (pixels instanceof HTMLVideoElement) {
+      if (pixelsInstance === 'HTMLVideoElement') {
         if (this.fromPixels2DContext == null) {
           if (document.readyState !== 'complete') {
             throw new Error(
@@ -238,12 +240,12 @@ export class MathBackendWebGL implements KernelBackend {
                 'on the document object');
           }
           this.fromPixels2DContext =
-              document.createElement('canvas').getContext('2d');
+              createCanvas().getContext('2d');
         }
         this.fromPixels2DContext.canvas.width = pixels.width;
         this.fromPixels2DContext.canvas.height = pixels.height;
         this.fromPixels2DContext.drawImage(
-            pixels, 0, 0, pixels.width, pixels.height);
+            pixels as any, 0, 0, pixels.width, pixels.height);
         pixels = this.fromPixels2DContext.canvas;
       }
     }

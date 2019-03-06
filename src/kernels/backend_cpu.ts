@@ -44,6 +44,7 @@ import {nonMaxSuppressionImpl} from './non_max_suppression_impl';
 import {split} from './split_shared';
 import {topkImpl} from './topk_impl';
 import {whereImpl} from './where_impl';
+import { createCanvas } from '../canvas_util';
 
 function mapActivation(
     backend: MathBackendCPU, activation: Activation, x: Tensor): Tensor {
@@ -75,7 +76,7 @@ export class MathBackendCPU implements KernelBackend {
   constructor() {
     if (ENV.get('IS_BROWSER')) {
       this.fromPixels2DContext =
-          document.createElement('canvas').getContext('2d');
+          createCanvas().getContext('2d');
     }
   }
 
@@ -126,17 +127,18 @@ export class MathBackendCPU implements KernelBackend {
           'like the one returned by the `canvas` npm package');
     }
     // tslint:disable-next-line:no-any
+    const pixelsInstance = pixels ? pixels.constructor.name : 'undefined';
     if ((pixels as any).getContext != null) {
       // tslint:disable-next-line:no-any
       vals = (pixels as any)
                  .getContext('2d')
                  .getImageData(0, 0, pixels.width, pixels.height)
                  .data;
-    } else if (pixels instanceof ImageData) {
-      vals = pixels.data;
+    } else if (pixelsInstance === 'ImageData') {
+      vals = (pixels as ImageData).data;
     } else if (
-        pixels instanceof HTMLImageElement ||
-        pixels instanceof HTMLVideoElement) {
+        pixelsInstance === 'HTMLImageElement' ||
+        pixelsInstance === 'HTMLVideoElement') {
       if (this.fromPixels2DContext == null) {
         throw new Error(
             'Can\'t read pixels from HTMLImageElement outside ' +
@@ -145,7 +147,7 @@ export class MathBackendCPU implements KernelBackend {
       this.fromPixels2DContext.canvas.width = pixels.width;
       this.fromPixels2DContext.canvas.height = pixels.height;
       this.fromPixels2DContext.drawImage(
-          pixels, 0, 0, pixels.width, pixels.height);
+          pixels as any, 0, 0, pixels.width, pixels.height);
       vals = this.fromPixels2DContext
                  .getImageData(0, 0, pixels.width, pixels.height)
                  .data;

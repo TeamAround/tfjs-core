@@ -22,6 +22,7 @@ import {KernelBackend} from './kernels/backend';
 import {DataId, setDeprecationWarningFn, setTensorTracker, Tensor} from './tensor';
 import {TensorContainer} from './tensor_types';
 import {getTensorsInContainer} from './tensor_util';
+import { MathBackendWebGL } from './kernels/backend_webgl';
 
 export const EPSILON_FLOAT16 = 1e-4;
 const TEST_EPSILON_FLOAT16 = 1e-1;
@@ -43,9 +44,8 @@ export class Environment {
 
     if (this.get('DEBUG')) {
       console.warn(
-          'Debugging mode is ON. The output of every math call will ' +
-          'be downloaded to CPU and checked for NaNs. ' +
-          'This significantly impacts performance.');
+        'Debugging mode is ON. The output of every math call will be downloaded to CPU and checked for NaNs. This significantly impacts performance.'
+      );
     }
   }
 
@@ -67,7 +67,21 @@ export class Environment {
   /** @doc {heading: 'Environment'} */
   static setBackend(backendName: string, safeMode = false) {
     if (!(backendName in ENV.registry)) {
-      throw new Error(`Backend name '${backendName}' not found in registry`);
+      if (backendName === 'worker-webgl') {            
+        ENV.setFeatures({            
+          'WEBGL_VERSION': 2,            
+          'IS_BROWSER': false            
+        });            
+
+        const success = ENV.registerBackend('worker-webgl', () => {            
+          return new MathBackendWebGL();
+        }, 104);
+        if (!success) {
+          throw new Error(`Failed to register backend ${backendName}`);
+        }
+      } else {
+        throw new Error(`Backend name '${backendName}' not found in registry`);
+      }
     }
     ENV.engine.backend = ENV.findBackend(backendName);
     ENV.backendName = backendName;
@@ -156,21 +170,21 @@ export class Environment {
    * inside a `tf.tidy` to prevent memory leaks.
    *
    * ```js
-   * // y = 2 ^ 2 + 1
+   * // y = 2 ^ 2  1
    * const y = tf.tidy(() => {
    *   // a, b, and one will be cleaned up when the tidy ends.
    *   const one = tf.scalar(1);
    *   const a = tf.scalar(2);
    *   const b = a.square();
    *
-   *   console.log('numTensors (in tidy): ' + tf.memory().numTensors);
+   *   console.log('numTensors (in tidy): '  tf.memory().numTensors);
    *
    *   // The value returned inside the tidy function will return
    *   // through the tidy, in this case to the variable y.
    *   return b.add(one);
    * });
    *
-   * console.log('numTensors (outside tidy): ' + tf.memory().numTensors);
+   * console.log('numTensors (outside tidy): '  tf.memory().numTensors);
    * y.print();
    * ```
    *
@@ -215,14 +229,14 @@ export class Environment {
    *   // when the tidy ends.
    *   b = tf.keep(a.square());
    *
-   *   console.log('numTensors (in tidy): ' + tf.memory().numTensors);
+   *   console.log('numTensors (in tidy): '  tf.memory().numTensors);
    *
    *   // The value returned inside the tidy function will return
    *   // through the tidy, in this case to the variable y.
    *   return b.add(one);
    * });
    *
-   * console.log('numTensors (outside tidy): ' + tf.memory().numTensors);
+   * console.log('numTensors (outside tidy): '  tf.memory().numTensors);
    * console.log('y:');
    * y.print();
    * console.log('b:');
@@ -535,8 +549,8 @@ export function disableDeprecationWarnings(): void {
 export function deprecationWarn(msg: string) {
   if (ENV.get('DEPRECATION_WARNINGS_ENABLED')) {
     console.warn(
-        msg + ' You can disable deprecation warnings with ' +
-        'tf.disableDeprecationWarnings().');
+      msg + ' You can disable deprecation warnings with tf.disableDeprecationWarnings().'
+    );
   }
 }
 setDeprecationWarningFn(deprecationWarn);
