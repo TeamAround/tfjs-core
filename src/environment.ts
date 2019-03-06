@@ -22,6 +22,7 @@ import {KernelBackend} from './kernels/backend';
 import {DataId, setDeprecationWarningFn, setTensorTracker, Tensor, TensorTracker} from './tensor';
 import {TensorContainer} from './tensor_types';
 import {getTensorsInContainer} from './tensor_util';
+import { MathBackendWebGL } from './kernels/backend_webgl';
 
 export const EPSILON_FLOAT16 = 1e-4;
 const TEST_EPSILON_FLOAT16 = 1e-1;
@@ -67,7 +68,21 @@ export class Environment {
   /** @doc {heading: 'Environment'} */
   static setBackend(backendName: string, safeMode = false) {
     if (!(backendName in ENV.registry)) {
-      throw new Error(`Backend name '${backendName}' not found in registry`);
+      if (backendName === 'worker-webgl') {            
+        ENV.setFeatures({
+            'WEBGL_VERSION': 2,
+            'IS_BROWSER': false
+        });
+
+        const success = ENV.registerBackend('worker-webgl', () => {
+          return new MathBackendWebGL();
+        }, 104);
+        if (!success) {
+          throw new Error("Failed to register backend " + backendName);
+        }
+      } else {
+        throw new Error(`Backend name '${backendName}' not found in registry`);
+      }
     }
     ENV.engine.backend = ENV.findBackend(backendName);
     ENV.backendName = backendName;

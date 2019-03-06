@@ -27,9 +27,21 @@ const WEBGL_ATTRIBUTES: WebGLContextAttributes = {
   failIfMajorPerformanceCaveat: true
 };
 
+export function createCanvas() {            
+  if (window && ('OffscreenCanvas' in window)) {            
+    return new OffscreenCanvas(1, 1);            
+  } else {            
+    if (self && ('OffscreenCanvas' in self)) {            
+      return new OffscreenCanvas(1, 1);            
+    } else {            
+      return document.createElement('canvas');            
+    }            
+  }            
+}
+
 export function getWebGLContext(webGLVersion: number): WebGLRenderingContext {
   if (!(webGLVersion in contexts)) {
-    const canvas = document.createElement('canvas');
+    const canvas = createCanvas();
     canvas.addEventListener('webglcontextlost', ev => {
       ev.preventDefault();
       delete contexts[webGLVersion];
@@ -60,7 +72,7 @@ function getWebGLRenderingContext(webGLVersion: number): WebGLRenderingContext {
     throw new Error('Cannot get WebGL rendering context, WebGL is disabled.');
   }
 
-  const canvas = document.createElement('canvas');
+  const canvas = createCanvas();
   if (webGLVersion === 1) {
     return (canvas.getContext('webgl', WEBGL_ATTRIBUTES) ||
             canvas.getContext('experimental-webgl', WEBGL_ATTRIBUTES)) as
